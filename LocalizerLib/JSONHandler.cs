@@ -6,6 +6,7 @@ namespace InkLocalizer;
 public class JsonHandler(Localizer localizer, JsonHandler.Options? options = null) {
 	public class Options {
 		public string OutputFilePath = "";
+		public bool Enabled => !string.IsNullOrEmpty(OutputFilePath);
 	}
 
 	private readonly Options _options = options ?? new Options();

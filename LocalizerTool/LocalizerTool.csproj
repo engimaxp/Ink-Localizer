@@ -1,22 +1,16 @@
-﻿<!-- dotnet publish -c Release -r osx-arm64 -o ./publish -->
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>LocalizerTool</AssemblyName>
+        <RootNamespace>InkLocalizer</RootNamespace>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <Version>0.0.1.1</Version>
-    <TargetFramework>net8.0</TargetFramework>
-    <RuntimeIdentifiers>osx-arm64;osx-x64;win-x64;win-x86</RuntimeIdentifiers>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
-    <AssemblyName>LocalizerTool</AssemblyName>
-    <RootNamespace>InkLocalizer</RootNamespace>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\LocalizerLib\LocalizerLib.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\LocalizerLib\LocalizerLib.csproj" />
+    </ItemGroup>
 
 </Project>

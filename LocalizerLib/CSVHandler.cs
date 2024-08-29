@@ -5,6 +5,7 @@ namespace InkLocalizer;
 public class CsvHandler(Localizer localizer, CsvHandler.Options? options = null) {
 	public class Options {
 		public string OutputFilePath = "";
+		public bool Enabled => !string.IsNullOrEmpty(OutputFilePath);
 	}
 
 	private readonly Options _options = options ?? new Options();
