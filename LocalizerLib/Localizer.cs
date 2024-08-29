@@ -4,56 +4,39 @@ using Object = Ink.Parsed.Object;
 
 namespace InkLocalizer;
 
-public sealed class Localizer(Localizer.Options? options = null) {
-	public class Options {
-		// If true, re-tag everything.
-		public bool ReTag = false;
-
-		// Root folder. If empty, uses current working dir.
-		public string Folder = "";
-
-		// Files to include. Will search subfolders of the working dir.
-		public string FilePattern = "*.ink";
-	}
-
-	private readonly Options _options = options ?? new Options();
+public sealed class Localizer(LocalizerOptions? options = null) {
+	private readonly LocalizerOptions _localizerOptions = options ?? new LocalizerOptions();
 
 	private static readonly IFileHandler FileHandler = new DefaultFileHandler();
-	private bool _inkParseErrors;
-	private readonly HashSet<string> _filesVisited = [];
-	private readonly Dictionary<string, List<TagInsert>> _filesTagsToInsert = new();
-	private readonly HashSet<string> _existingIDs = [];
-	public Dictionary<string, string> Strings { get; } = new();
-	private string _previousCwd = "";
 
-	// Return the text of a string, by locID
-	public string GetString(string locId) => Strings[locId];
+	private readonly HashSet<string> _filesVisited = [];
+	public Dictionary<string, string> Strings { private set; get; } = new();
+
+	private IdGenerator _idGenerator = null!;
 
 	public bool Run() {
 		string folderPath = GetDirectoryPath();
 		// Need this for InkParser to work properly with includes and such.
 		Directory.SetCurrentDirectory(folderPath);
 		bool success = TryProcessDirectory(folderPath);
-		Directory.SetCurrentDirectory(_previousCwd);
+		Directory.SetCurrentDirectory(Environment.CurrentDirectory);
 
 		return success;
 	}
 
 	private string GetDirectoryPath() {
-		_previousCwd = Environment.CurrentDirectory;
-
-		string folderPath = _options.Folder;
+		string folderPath = _localizerOptions.RootFolder;
 		if (string.IsNullOrWhiteSpace(folderPath))
-			folderPath = _previousCwd;
-		folderPath = System.IO.Path.GetFullPath(folderPath);
-		return folderPath;
+			folderPath = Environment.CurrentDirectory;
+
+		return System.IO.Path.GetFullPath(folderPath);
 	}
 
 	private bool TryProcessDirectory(string folderPath) {
 		List<string> inkFiles = [];
 		try {
 			DirectoryInfo dir = new(folderPath);
-			inkFiles.AddRange(dir.GetFiles(_options.FilePattern, SearchOption.AllDirectories)
+			inkFiles.AddRange(dir.GetFiles(_localizerOptions.FilePattern, SearchOption.AllDirectories)
 				.Select(file => file.FullName));
 		}
 		catch (Exception ex) {
@@ -75,24 +58,28 @@ public sealed class Localizer(Localizer.Options? options = null) {
 	private bool ProcessFiles(List<string> inkFiles) {
 		foreach (string inkFile in inkFiles) {
 			string? content = FileHandler.LoadInkFileContents(inkFile);
-			if (content == null) {
+			if (content == null)
 				return false;
+
+			try {
+				InkParser parser = new(content, inkFile, OnError, FileHandler);
+				Story? story = parser.Parse();
+
+				// Go through the parsed story extracting existing localized lines, and lines still to be localized...
+				if (!ProcessStory(story)) {
+					return false;
+				}
 			}
-
-			InkParser parser = new(content, inkFile, OnError, FileHandler);
-
-			Story? story = parser.Parse();
-			if (_inkParseErrors) {
-				Console.Error.WriteLine("Error parsing ink file.");
-				return false;
-			}
-
-			// Go through the parsed story extracting existing localized lines, and lines still to be localized...
-			if (!ProcessStory(story)) {
+			catch (Exception ex) {
+				Console.Error.WriteLine($"Error parsing ink file ({inkFile}): {ex.Message}");
 				return false;
 			}
 		}
 		return true;
+	}
+
+	private static void OnError(string message, ErrorType type) {
+		throw new Exception("Ink Parse Error: " + message);
 	}
 
 	private bool ProcessStory(Story story) {
@@ -104,10 +91,10 @@ public sealed class Localizer(Localizer.Options? options = null) {
 		if (newFilesVisited.Count > 0)
 			_filesVisited.UnionWith(newFilesVisited);
 
-		GetExistingIDs(validTextObjects);
+		_idGenerator = new IdGenerator(validTextObjects, _localizerOptions);
 
 		// IDs are stored as tags in the form #id:file_knot_stitch_xxxx
-		GenerateLocalizationIDs(validTextObjects);
+		Strings = _idGenerator.GenerateLocalizationIDs(validTextObjects);
 
 		return true;
 	}
@@ -141,7 +128,7 @@ public sealed class Localizer(Localizer.Options? options = null) {
 
 	private static bool IsTextValid(Text text) {
 		// Just a newline? Ignore.
-		if (text.text.Trim() == "")
+		if (text.text.Trim() == string.Empty)
 			return false;
 
 		// If it's a tag, ignore.
@@ -155,113 +142,18 @@ public sealed class Localizer(Localizer.Options? options = null) {
 		return true;
 	}
 
-	private void GetExistingIDs(List<Text> validTextObjects) {
-		if (_options.ReTag)
-			return;
-
-		foreach (string? locTag in validTextObjects.Select(TagManagement.FindLocTagId).OfType<string>())
-			_existingIDs.Add(locTag);
-	}
-
-	private void GenerateLocalizationIDs(List<Text> validTextObjects) {
-		foreach (Text text in validTextObjects) {
-			// Does the source already have a #id: tag?
-			string? locId = TagManagement.FindLocTagId(text);
-
-			// Skip if there's a tag and we aren't forcing a re-tag
-			if (locId != null && !_options.ReTag) {
-				// Add existing string to localization strings.
-				AddString(locId, text.text);
-				continue;
-			}
-
-			// Generate a new ID
-			string fileName = text.debugMetadata.fileName;
-			string fileId = System.IO.Path.GetFileNameWithoutExtension(fileName);
-			string pathPrefix = fileId + "_";
-			string locPrefix = pathPrefix + MakeLocPrefix(text);
-			locId = GenerateUniqueId(locPrefix);
-
-			// Add the ID and text object to a list of things to fix up in this file.
-			if (!_filesTagsToInsert.ContainsKey(fileName))
-				_filesTagsToInsert[fileName] = [];
-			TagInsert insert = new() {
-				Text = text,
-				LocId = locId
-			};
-			_filesTagsToInsert[fileName].Add(insert);
-
-			// Add new string to localization strings.
-			AddString(locId, text.text);
-		}
-	}
-
-	private void AddString(string locId, string value) {
-		if (Strings.ContainsKey(locId)) {
-			Console.Error.WriteLine(
-				$"Unexpected behaviour - trying to add content for a string named {locId}, but one already exists? Have you duplicated a tag?");
-			return;
-		}
-
-		Strings[locId] = value.Trim();
-	}
-
 	// Go through every Ink file that needs a tag insertion, and insert!
+
 	private bool InsertTagsToFiles() {
-		foreach ((string fileName, List<TagInsert> workList) in _filesTagsToInsert) {
+		foreach ((string fileName, List<TagInsert> workList) in _idGenerator.FilesTagsToInsert) {
 			if (workList.Count == 0)
 				continue;
 
 			Console.WriteLine($"Updating IDs in file: {fileName}");
 
-			if (!TagManagement.InsertTagsToFile(fileName, workList))
+			if (!TagManagement.InsertTagsToFile(fileName, workList, FileHandler))
 				return false;
 		}
 		return true;
-	}
-
-	// Constructs a prefix from knot / stitch
-	private static string MakeLocPrefix(Text text) {
-		string prefix = "";
-		foreach (Object? obj in text.ancestry) {
-			switch (obj) {
-				case Knot knot:
-					prefix += $"{knot.name}_";
-					break;
-				case Stitch stitch:
-					prefix += $"{stitch.name}_";
-					break;
-			}
-		}
-
-		return prefix;
-	}
-
-	private string GenerateUniqueId(string locPrefix) {
-		// Repeat a lot to try and get options. Should be hard to fail at this but
-		// let's set a limit to stop locks.
-		for (int i = 0; i < 100; i++) {
-			string locId = locPrefix + GenerateId();
-			if (_existingIDs.Add(locId)) {
-				return locId;
-			}
-		}
-		throw new Exception("Couldn't generate a unique ID! Really unlikely. Try again!");
-	}
-
-	private static readonly Random Random = new();
-
-	private static string GenerateId(int length = 4) {
-		const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		char[] stringChars = new char[length];
-		for (int i = 0; i < length; i++) {
-			stringChars[i] = chars[Random.Next(chars.Length)];
-		}
-		return new string(stringChars);
-	}
-
-	private void OnError(string message, ErrorType type) {
-		_inkParseErrors = true;
-		Console.Error.WriteLine("Ink Parse Error: " + message);
 	}
 }

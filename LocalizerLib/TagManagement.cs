@@ -10,11 +10,9 @@ internal static partial class TagManagement {
 	private const string TagLoc = "id:";
 	private const bool DebugReTagFiles = false;
 
-	private static readonly IFileHandler FileHandler = new DefaultFileHandler();
-
-	public static bool InsertTagsToFile(string fileName, List<TagInsert> workList) {
+	public static bool InsertTagsToFile(string fileName, List<TagInsert> workList, IFileHandler fileHandler) {
 		try {
-			string filePath = FileHandler.ResolveInkFilename(fileName);
+			string filePath = fileHandler.ResolveInkFilename(fileName);
 			string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
 
 			foreach (TagInsert item in workList) {

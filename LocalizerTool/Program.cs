@@ -1,17 +1,17 @@
 ﻿using InkLocalizer;
 
-Localizer.Options options = new();
+LocalizerOptions localizerOptions = new();
 CsvHandler.Options csvOptions = new();
 JsonHandler.Options jsonOptions = new();
 
 // ----- Simple Args -----
 foreach (string arg in args) {
 	if (arg.Equals("--retag"))
-		options.ReTag = true;
+		localizerOptions.ReTag = true;
 	else if (arg.StartsWith("--folder="))
-		options.Folder = arg.Substring(9);
+		localizerOptions.RootFolder = arg.Substring(9);
 	else if (arg.StartsWith("--filePattern="))
-		options.FilePattern = arg.Substring(14);
+		localizerOptions.FilePattern = arg.Substring(14);
 	else if (arg.StartsWith("--csv="))
 		csvOptions.OutputFilePath = arg.Substring(6);
 	else if (arg.StartsWith("--json="))
@@ -37,7 +37,7 @@ foreach (string arg in args) {
 			Console.WriteLine("  --retag - Regenerate all localisation tag IDs, rather than keep old IDs.");
 			return 0;
 		case "--test":
-			options.Folder = "tests";
+			localizerOptions.RootFolder = "tests";
 			csvOptions.OutputFilePath = "tests/strings.csv";
 			jsonOptions.OutputFilePath = "tests/strings.json";
 			break;
@@ -45,7 +45,7 @@ foreach (string arg in args) {
 }
 
 // ----- Parse Ink, Update Tags, Build String List -----
-Localizer localizer = new(options);
+Localizer localizer = new(localizerOptions);
 if (!localizer.Run()) {
 	Console.Error.WriteLine("Not localized.");
 	return -1;
