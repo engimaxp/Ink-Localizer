@@ -5,6 +5,8 @@
     <Version>0.0.1.1</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>LocalizerLib</AssemblyName>
+    <RootNamespace>InkLocalizer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

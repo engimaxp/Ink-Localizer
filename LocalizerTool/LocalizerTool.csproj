@@ -11,10 +11,12 @@
     <Nullable>enable</Nullable>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
+    <AssemblyName>LocalizerTool</AssemblyName>
+    <RootNamespace>InkLocalizer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../LocaliserLib/LocaliserLib.csproj" />
+    <ProjectReference Include="..\LocalizerLib\LocalizerLib.csproj" />
   </ItemGroup>
 
 </Project>
