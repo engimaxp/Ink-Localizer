@@ -33,13 +33,10 @@ public sealed class Localizer(Localizer.Options? options = null) {
 	public string GetString(string locId) => _stringValues[locId];
 
 	public bool Run() {
-		// ----- Figure out which files to include -----
-		List<string> inkFiles = [];
-
 		string folderPath = GetDirectoryPath();
 		// Need this for InkParser to work properly with includes and such.
 		Directory.SetCurrentDirectory(folderPath);
-		bool success = TryProcessDirectory(folderPath, inkFiles);
+		bool success = TryProcessDirectory(folderPath);
 		Directory.SetCurrentDirectory(_previousCwd);
 
 		return success;
@@ -55,7 +52,8 @@ public sealed class Localizer(Localizer.Options? options = null) {
 		return folderPath;
 	}
 
-	private bool TryProcessDirectory(string folderPath, List<string> inkFiles) {
+	private bool TryProcessDirectory(string folderPath) {
+		List<string> inkFiles = [];
 		try {
 			DirectoryInfo dir = new(folderPath);
 			inkFiles.AddRange(dir.GetFiles(_options.FilePattern, SearchOption.AllDirectories)
