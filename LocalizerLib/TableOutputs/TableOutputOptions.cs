@@ -1,4 +1,4 @@
-﻿namespace InkLocalizer;
+﻿namespace InkLocalizer.TableOutputs;
 
 public class TableOutputOptions {
 	public string OutputFilePath = "";

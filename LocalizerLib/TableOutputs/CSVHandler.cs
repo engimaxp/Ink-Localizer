@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace InkLocalizer;
+namespace InkLocalizer.TableOutputs;
 
 public class CsvHandler(Localizer localizer, TableOutputOptions? options = null) {
 	private readonly TableOutputOptions _options = options ?? new TableOutputOptions();

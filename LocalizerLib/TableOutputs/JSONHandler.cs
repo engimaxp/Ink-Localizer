@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace InkLocalizer;
+namespace InkLocalizer.TableOutputs;
 
 public class JsonHandler(Localizer localizer, TableOutputOptions? options = null) {
 	private readonly TableOutputOptions _options = options ?? new TableOutputOptions();

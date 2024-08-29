@@ -1,4 +1,6 @@
-﻿namespace InkLocalizer;
+﻿using InkLocalizer.TableOutputs;
+
+namespace InkLocalizer;
 
 internal abstract class Program {
 
