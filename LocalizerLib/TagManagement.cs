@@ -73,34 +73,50 @@ internal static partial class TagManagement {
 		bool afterText = false;
 		int inTag = 0;
 
-		foreach (Object? sibling in text.parent.content) {
-			// Have we hit the text we care about yet? If not, carry on.
-			if (sibling == text) {
-				afterText = true;
-				continue;
-			}
-			if (!afterText)
+		foreach (Object sibling in text.parent.content) {
+			if (IsBeforeText(text, sibling, ref afterText))
 				continue;
 
-			// Have we hit an end-of-line marker? If so, stop looking, no tags here.
-			if (sibling is Text { text: "\n" })
-				break;
+			if (IsEndOfLine(sibling))
+				return tags;
 
-			// Have we found the start or end of a tag?
-			if (sibling is Tag tag) {
-				if (tag.isStart)
-					inTag++;
-				else
-					inTag--;
+			if (IsTag(sibling, ref inTag))
 				continue;
-			}
 
-			// Have we hit the end of a tag? Add it to our tag list!
-			if (inTag > 0 && sibling is Text text1) {
-				tags.Add(text1.text.Trim());
-			}
+			TryAddTag(inTag, sibling, tags);
 		}
 		return tags;
+	}
+
+	private static bool IsBeforeText(Text text, Object sibling, ref bool afterText) {
+		if (sibling == text) {
+			afterText = true;
+			return true;
+		}
+		if (!afterText)
+			return true;
+		return false;
+	}
+
+	private static bool IsEndOfLine(Object sibling) {
+		return sibling is Text { text: "\n" };
+	}
+
+	private static void TryAddTag(int inTag, Object sibling, List<string> tags) {
+		if (inTag > 0 && sibling is Text text) {
+			tags.Add(text.text.Trim());
+		}
+	}
+
+	private static bool IsTag(Object sibling, ref int inTag) {
+		if (sibling is not Tag tag)
+			return false;
+
+		if (tag.isStart)
+			inTag++;
+		else
+			inTag--;
+		return true;
 	}
 
 	// Checking it's a tag. Is there a StartTag earlier in the parent content?
@@ -118,4 +134,6 @@ internal static partial class TagManagement {
 
 		return inTag > 0;
 	}
+	public static bool IsTextInsideCode(Text text) =>
+		text.parent is VariableAssignment or StringExpression;
 }

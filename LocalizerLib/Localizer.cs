@@ -123,16 +123,11 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 	}
 
 	private static bool IsTextValid(Text text) {
-		// Just a newline? Ignore.
 		if (text.text.Trim() == string.Empty)
 			return false;
-
-		// If it's a tag, ignore.
 		if (IsTextTag(text))
 			return false;
-
-		// Is this inside some code? In which case we can't do anything with that.
-		if (text.parent is VariableAssignment or StringExpression)
+		if (IsTextInsideCode(text))
 			return false;
 
 		return true;
