@@ -6,7 +6,7 @@ using Object = Ink.Parsed.Object;
 
 namespace InkLocalizer;
 
-internal static class TagManagement {
+internal static partial class TagManagement {
 	private const string TagLoc = "id:";
 	private const bool DebugReTagFiles = false;
 
@@ -18,31 +18,9 @@ internal static class TagManagement {
 			string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
 
 			foreach (TagInsert item in workList) {
-				// Tag
-				string newTag = $"#{TagLoc}{item.LocId}";
-
 				// Find out where we're supposed to do the insert.
 				int lineNumber = item.Text.debugMetadata.endLineNumber - 1;
-				string oldLine = lines[lineNumber];
-				string newLine;
-
-				if (oldLine.Contains($"#{TagLoc}")) {
-					// Is there already a tag called #id: in there? In which case, we just want to replace that.
-					// Replace the matched text
-					string pattern = $@"(#{TagLoc})\w+";
-					newLine = Regex.Replace(oldLine, pattern, $"{newTag}");
-				} else {
-					// No tag, add a new one.
-					int charPos = item.Text.debugMetadata.endCharacterNumber - 1;
-
-					// Pad between other tags or previous item
-					if (!char.IsWhiteSpace(oldLine[charPos - 1]))
-						newTag = " " + newTag;
-					if (oldLine.Length > charPos && (oldLine[charPos] == '#' || oldLine[charPos] == '/'))
-						newTag += " ";
-
-					newLine = oldLine.Insert(charPos, newTag);
-				}
+				string newLine = InsertTagInLine(item, lines, lineNumber);
 
 				lines[lineNumber] = newLine;
 			}
@@ -59,6 +37,27 @@ internal static class TagManagement {
 			Console.Error.WriteLine($"Error replacing tags in {fileName}: " + ex.Message);
 			return false;
 		}
+	}
+
+	[GeneratedRegex($@"(#{TagLoc})\w+")]
+	private static partial Regex TagRegex();
+	private static string InsertTagInLine(TagInsert item, string[] lines, int lineNumber) {
+		string newTag = $"#{TagLoc}{item.LocId}";
+		string oldLine = lines[lineNumber];
+		if (oldLine.Contains($"#{TagLoc}")) {
+			// Is there already a tag called #id: in there? In which case, we just want to replace that.
+			return TagRegex().Replace(oldLine, $"{newTag}");
+		}
+		// No tag, add a new one.
+		int charPos = item.Text.debugMetadata.endCharacterNumber - 1;
+
+		// Pad between other tags or previous item
+		if (!char.IsWhiteSpace(oldLine[charPos - 1]))
+			newTag = $" {newTag}";
+		if (oldLine.Length > charPos && (oldLine[charPos] == '#' || oldLine[charPos] == '/'))
+			newTag += " ";
+
+		return oldLine.Insert(charPos, newTag);
 	}
 
 	public static string? FindLocTagId(Text text) {
