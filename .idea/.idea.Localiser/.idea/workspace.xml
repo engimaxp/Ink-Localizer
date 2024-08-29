@@ -8,13 +8,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c1bf926e-eb98-4cc7-9527-74d7686db4d0" name="Changes" comment="chore: renamed solution">
-      <change beforePath="$PROJECT_DIR$/LocalizerLib/IdGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/LocalizerLib/IdGenerator.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LocalizerLib/Localizer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/LocalizerLib/Localizer.cs" afterDir="false" />
+    <list default="true" id="c1bf926e-eb98-4cc7-9527-74d7686db4d0" name="Changes" comment="fix: exporting modified text">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Localiser/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Localiser/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LocalizerLib/TagManagement.cs" beforeDir="false" afterPath="$PROJECT_DIR$/LocalizerLib/TagManagement.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LocalizerTool/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/LocalizerTool/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LocalizerTool/tests/strings.csv" beforeDir="false" afterPath="$PROJECT_DIR$/LocalizerTool/tests/strings.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LocalizerTool/tests/strings.json" beforeDir="false" afterPath="$PROJECT_DIR$/LocalizerTool/tests/strings.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,7 +121,7 @@
       <updated>1724924672571</updated>
       <workItem from="1724924673715" duration="157000" />
       <workItem from="1724924840408" duration="9918000" />
-      <workItem from="1724954714037" duration="5735000" />
+      <workItem from="1724954714037" duration="5938000" />
     </task>
     <task id="LOCAL-00001" summary="chore: reformat code to fit my style">
       <option name="closed" value="true" />
@@ -246,7 +243,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724959486801</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="fix: exporting modified text">
+      <option name="closed" value="true" />
+      <created>1724961824529</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1724961824529</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
@@ -280,6 +285,7 @@
     <MESSAGE value="chore: organize project in folders" />
     <MESSAGE value="FEAT!: Throwing exceptions instead of bool-checking" />
     <MESSAGE value="chore: renamed solution" />
-    <option name="LAST_COMMIT_MESSAGE" value="chore: renamed solution" />
+    <MESSAGE value="fix: exporting modified text" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: exporting modified text" />
   </component>
 </project>

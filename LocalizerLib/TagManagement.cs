@@ -8,7 +8,6 @@ namespace InkLocalizer;
 
 internal static partial class TagManagement {
 	private const string TagLoc = "id:";
-	private const bool DebugReTagFiles = true;
 
 	[GeneratedRegex($@"(#{TagLoc})\w+")]
 	private static partial Regex TagRegex();
@@ -27,9 +26,9 @@ internal static partial class TagManagement {
 
 		string output = string.Join("\n", lines);
 		string outputFilePath = filePath;
-		if (DebugReTagFiles)
-			outputFilePath += ".txt";
-
+#if DEBUG
+		outputFilePath += ".txt";
+#endif
 		Console.WriteLine(outputFilePath);
 		File.WriteAllText(outputFilePath, output, Encoding.UTF8);
 	}

@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
-using InkLocalizer.TableOutputs;
+﻿using InkLocalizer.TableOutputs;
 
 namespace InkLocalizer;
 
 internal abstract class Program {
+#if DEBUG
 	private const string DebuggingTestPath = @"E:\GitHub\Ink-Localiser\LocalizerTool\tests";
-
+#endif
 	private static readonly LocalizerOptions LocalizerOptions = new();
 	private static readonly TableOutputOptions CsvOptions = new();
 	private static readonly TableOutputOptions JsonOptions = new();
@@ -60,12 +60,14 @@ internal abstract class Program {
 			JsonOptions.OutputFilePath = arg.Substring(7);
 			return false;
 		}
+#if DEBUG
 		if (arg.StartsWith("--test")) {
 			LocalizerOptions.RootFolder = DebuggingTestPath;
 			CsvOptions.OutputFilePath = @$"{DebuggingTestPath}\strings.csv";
 			JsonOptions.OutputFilePath = @$"{DebuggingTestPath}\strings.json";
 			return false;
 		}
+#endif
 
 		Console.WriteLine(
 			"""
