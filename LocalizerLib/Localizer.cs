@@ -1,12 +1,10 @@
-using System.Text;
-using System.Text.RegularExpressions;
 using Ink;
 using Ink.Parsed;
 using Object = Ink.Parsed.Object;
 
 namespace InkLocalizer;
 
-public sealed partial class Localizer(Localizer.Options? options = null) {
+public sealed class Localizer(Localizer.Options? options = null) {
 	public class Options {
 		// If true, re-tag everything.
 		public bool ReTag = false;
@@ -31,23 +29,33 @@ public sealed partial class Localizer(Localizer.Options? options = null) {
 	private readonly Dictionary<string, string> _stringValues = new();
 	private string _previousCwd = "";
 
-	public bool Run() {
-		bool success = true;
+	// Return the text of a string, by locID
+	public string GetString(string locId) => _stringValues[locId];
 
+	public bool Run() {
 		// ----- Figure out which files to include -----
 		List<string> inkFiles = [];
 
-		// We'll restore this later.
+		string folderPath = GetDirectoryPath();
+		// Need this for InkParser to work properly with includes and such.
+		Directory.SetCurrentDirectory(folderPath);
+		bool success = TryProcessDirectory(folderPath, inkFiles);
+		Directory.SetCurrentDirectory(_previousCwd);
+
+		return success;
+	}
+
+	private string GetDirectoryPath() {
 		_previousCwd = Environment.CurrentDirectory;
 
 		string folderPath = _options.Folder;
 		if (string.IsNullOrWhiteSpace(folderPath))
 			folderPath = _previousCwd;
 		folderPath = System.IO.Path.GetFullPath(folderPath);
+		return folderPath;
+	}
 
-		// Need this for InkParser to work properly with includes and such.
-		Directory.SetCurrentDirectory(folderPath);
-
+	private bool TryProcessDirectory(string folderPath, List<string> inkFiles) {
 		try {
 			DirectoryInfo dir = new(folderPath);
 			inkFiles.AddRange(dir.GetFiles(_options.FilePattern, SearchOption.AllDirectories)
@@ -55,50 +63,42 @@ public sealed partial class Localizer(Localizer.Options? options = null) {
 		}
 		catch (Exception ex) {
 			Console.Error.WriteLine($"Error finding files to process: {folderPath}: " + ex.Message);
-			success = false;
+			return false;
 		}
 
 		// ----- For each file... -----
-		if (success) {
-			foreach (string inkFile in inkFiles) {
-				string? content = FileHandler.LoadInkFileContents(inkFile);
-				if (content == null) {
-					success = false;
-					break;
-				}
-
-				InkParser parser = new(content, inkFile, OnError, FileHandler);
-
-				Story? story = parser.Parse();
-				if (_inkParseErrors) {
-					Console.Error.WriteLine($"Error parsing ink file.");
-					success = false;
-					break;
-				}
-
-				// Go through the parsed story extracting existing localised lines, and lines still to be localised...
-				if (!ProcessStory(story)) {
-					success = false;
-					break;
-				}
-			}
-		}
+		if (!ProcessFiles(inkFiles))
+			return false;
 
 		// If new tags need to be added, add them now.
-		if (success) {
-			if (!InsertTagsToFiles()) {
-				success = false;
-			}
-		}
+		if (!InsertTagsToFiles())
+			return false;
 
-		// Restore current directory.
-		Directory.SetCurrentDirectory(_previousCwd);
-
-		return success;
+		return true;
 	}
 
-	// Return the text of a string, by locID
-	public string GetString(string locId) => _stringValues[locId];
+	private bool ProcessFiles(List<string> inkFiles) {
+		foreach (string inkFile in inkFiles) {
+			string? content = FileHandler.LoadInkFileContents(inkFile);
+			if (content == null) {
+				return false;
+			}
+
+			InkParser parser = new(content, inkFile, OnError, FileHandler);
+
+			Story? story = parser.Parse();
+			if (_inkParseErrors) {
+				Console.Error.WriteLine("Error parsing ink file.");
+				return false;
+			}
+
+			// Go through the parsed story extracting existing localised lines, and lines still to be localised...
+			if (!ProcessStory(story)) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	private bool ProcessStory(Story story) {
 		HashSet<string> newFilesVisited = [];
@@ -121,16 +121,7 @@ public sealed partial class Localizer(Localizer.Options? options = null) {
 		validTextObjects = [];
 		int lastLineNumber = -1;
 		foreach (Text? text in story.FindAll<Text>()) {
-			// Just a newline? Ignore.
-			if (text.text.Trim() == "")
-				continue;
-
-			// If it's a tag, ignore.
-			if (TagManagement.IsTextTag(text))
-				continue;
-
-			// Is this inside some code? In which case we can't do anything with that.
-			if (text.parent is VariableAssignment or StringExpression)
+			if (!IsTextValid(text))
 				continue;
 
 			// Have we already visited this source file i.e. is it in an include we've seen before?
@@ -150,6 +141,22 @@ public sealed partial class Localizer(Localizer.Options? options = null) {
 
 			validTextObjects.Add(text);
 		}
+		return true;
+	}
+
+	private static bool IsTextValid(Text text) {
+		// Just a newline? Ignore.
+		if (text.text.Trim() == "")
+			return false;
+
+		// If it's a tag, ignore.
+		if (TagManagement.IsTextTag(text))
+			return false;
+
+		// Is this inside some code? In which case we can't do anything with that.
+		if (text.parent is VariableAssignment or StringExpression)
+			return false;
+
 		return true;
 	}
 
