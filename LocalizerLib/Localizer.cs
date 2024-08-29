@@ -1,5 +1,6 @@
 using Ink;
 using Ink.Parsed;
+using InkLocalizer.Helper;
 using static InkLocalizer.TagManagement;
 
 namespace InkLocalizer;
@@ -10,7 +11,7 @@ public sealed class Localizer {
 	private static readonly IFileHandler FileHandler = new DefaultFileHandler();
 
 	private readonly HashSet<string> _filesVisited = [];
-	public Dictionary<string, string> Strings { private set; get; } = new();
+	public Dictionary<string, string> Strings { get; } = new();
 
 	public Localizer(LocalizerOptions? options = null) {
 		_localizerOptions = options ?? new LocalizerOptions();
@@ -72,7 +73,7 @@ public sealed class Localizer {
 
 		_idGenerator.SetExistingIDs(validTextObjects);
 
-		Strings = _idGenerator.GenerateLocalizationIDs(validTextObjects);
+		Strings.AddRange(_idGenerator.GenerateLocalizationIDs(validTextObjects));
 	}
 
 	private List<Text> FindLocalizableText(Story story, HashSet<string> newFilesVisited) {
