@@ -23,14 +23,11 @@ public sealed class Localizer(Localizer.Options? options = null) {
 	private readonly HashSet<string> _filesVisited = [];
 	private readonly Dictionary<string, List<TagInsert>> _filesTagsToInsert = new();
 	private readonly HashSet<string> _existingIDs = [];
-
-	private readonly List<string> _stringKeys = [];
-	public IList<string> StringKeys => _stringKeys;
-	private readonly Dictionary<string, string> _stringValues = new();
+	public Dictionary<string, string> Strings { get; } = new();
 	private string _previousCwd = "";
 
 	// Return the text of a string, by locID
-	public string GetString(string locId) => _stringValues[locId];
+	public string GetString(string locId) => Strings[locId];
 
 	public bool Run() {
 		string folderPath = GetDirectoryPath();
@@ -90,7 +87,7 @@ public sealed class Localizer(Localizer.Options? options = null) {
 				return false;
 			}
 
-			// Go through the parsed story extracting existing localised lines, and lines still to be localised...
+			// Go through the parsed story extracting existing localized lines, and lines still to be localized...
 			if (!ProcessStory(story)) {
 				return false;
 			}
@@ -173,7 +170,7 @@ public sealed class Localizer(Localizer.Options? options = null) {
 
 			// Skip if there's a tag and we aren't forcing a re-tag
 			if (locId != null && !_options.ReTag) {
-				// Add existing string to localisation strings.
+				// Add existing string to localization strings.
 				AddString(locId, text.text);
 				continue;
 			}
@@ -194,21 +191,19 @@ public sealed class Localizer(Localizer.Options? options = null) {
 			};
 			_filesTagsToInsert[fileName].Add(insert);
 
-			// Add new string to localisation strings.
+			// Add new string to localization strings.
 			AddString(locId, text.text);
 		}
 	}
 
 	private void AddString(string locId, string value) {
-		if (_stringKeys.Contains(locId)) {
+		if (Strings.ContainsKey(locId)) {
 			Console.Error.WriteLine(
 				$"Unexpected behaviour - trying to add content for a string named {locId}, but one already exists? Have you duplicated a tag?");
 			return;
 		}
 
-		// Keeping the order of strings.
-		_stringKeys.Add(locId);
-		_stringValues[locId] = value.Trim();
+		Strings[locId] = value.Trim();
 	}
 
 	// Go through every Ink file that needs a tag insertion, and insert!

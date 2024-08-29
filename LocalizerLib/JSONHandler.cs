@@ -15,9 +15,7 @@ public class JsonHandler(Localizer localizer, JsonHandler.Options? options = nul
 		string outputFilePath = Path.GetFullPath(_options.OutputFilePath);
 
 		try {
-			Dictionary<string, string> entries = localizer.StringKeys.ToDictionary(locId => locId, localizer.GetString);
-
-			string fileContents = JsonSerializer.Serialize(entries, _serializerOptions);
+			string fileContents = JsonSerializer.Serialize(localizer.Strings, _serializerOptions);
 
 			File.WriteAllText(outputFilePath, fileContents, Encoding.UTF8);
 		}

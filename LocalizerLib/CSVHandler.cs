@@ -16,10 +16,10 @@ public class CsvHandler(Localizer localizer, CsvHandler.Options? options = null)
 			StringBuilder output = new();
 			output.AppendLine("ID,Text");
 
-			foreach (string locId in localizer.StringKeys) {
-				string textValue = localizer.GetString(locId);
+			foreach (KeyValuePair<string, string> locStr in localizer.Strings) {
+				string textValue = locStr.Value;
 				textValue = textValue.Replace("\"", "\"\"");
-				string line = $"{locId},\"{textValue}\"";
+				string line = $"{locStr.Key},\"{textValue}\"";
 				output.AppendLine(line);
 			}
 

@@ -22,10 +22,10 @@ foreach (string arg in args) {
 			Console.WriteLine("Ink Localizer");
 			Console.WriteLine("Arguments:");
 			Console.WriteLine(
-				"  --folder=<folder> - Root folder to scan for Ink files to localise, relative to working dir.");
+				"  --folder=<folder> - Root folder to scan for Ink files to localize, relative to working dir.");
 			Console.WriteLine("                      e.g. --folder=inkFiles/");
 			Console.WriteLine("                      Default is the current working dir.");
-			Console.WriteLine("  --filePattern=<folder> - Root folder to scan for Ink files to localise.");
+			Console.WriteLine("  --filePattern=<folder> - Root folder to scan for Ink files to localize.");
 			Console.WriteLine("                           e.g. --filePattern=start-*.ink");
 			Console.WriteLine("                           Default is *.ink");
 			Console.WriteLine("  --csv=<csvFile> - Path to a CSV file to export, relative to working dir.");
@@ -47,10 +47,10 @@ foreach (string arg in args) {
 // ----- Parse Ink, Update Tags, Build String List -----
 Localizer localizer = new(options);
 if (!localizer.Run()) {
-	Console.Error.WriteLine("Not localised.");
+	Console.Error.WriteLine("Not localized.");
 	return -1;
 }
-Console.WriteLine($"Localised - found {localizer.StringKeys.Count} strings.");
+Console.WriteLine($"Localized - found {localizer.Strings.Count} strings.");
 
 // ----- CSV Output -----
 if (!string.IsNullOrEmpty(csvOptions.OutputFilePath)) {
