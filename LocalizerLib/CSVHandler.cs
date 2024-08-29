@@ -2,13 +2,8 @@ using System.Text;
 
 namespace InkLocalizer;
 
-public class CsvHandler(Localizer localizer, CsvHandler.Options? options = null) {
-	public class Options {
-		public string OutputFilePath = "";
-		public bool Enabled => !string.IsNullOrEmpty(OutputFilePath);
-	}
-
-	private readonly Options _options = options ?? new Options();
+public class CsvHandler(Localizer localizer, TableOutputOptions? options = null) {
+	private readonly TableOutputOptions _options = options ?? new TableOutputOptions();
 
 	public bool WriteStrings() {
 		string outputFilePath = Path.GetFullPath(_options.OutputFilePath);

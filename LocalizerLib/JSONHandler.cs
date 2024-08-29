@@ -3,13 +3,8 @@ using System.Text.Json;
 
 namespace InkLocalizer;
 
-public class JsonHandler(Localizer localizer, JsonHandler.Options? options = null) {
-	public class Options {
-		public string OutputFilePath = "";
-		public bool Enabled => !string.IsNullOrEmpty(OutputFilePath);
-	}
-
-	private readonly Options _options = options ?? new Options();
+public class JsonHandler(Localizer localizer, TableOutputOptions? options = null) {
+	private readonly TableOutputOptions _options = options ?? new TableOutputOptions();
 	private readonly JsonSerializerOptions _serializerOptions = new() { WriteIndented = true };
 
 	public bool WriteStrings() {

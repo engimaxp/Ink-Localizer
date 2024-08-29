@@ -3,8 +3,8 @@
 internal abstract class Program {
 
 	private static readonly LocalizerOptions LocalizerOptions = new();
-	private static readonly CsvHandler.Options CsvOptions = new();
-	private static readonly JsonHandler.Options JsonOptions = new();
+	private static readonly TableOutputOptions CsvOptions = new();
+	private static readonly TableOutputOptions JsonOptions = new();
 
 	private static int Main(string[] args) {
 		if (ProcessArgs(args))
