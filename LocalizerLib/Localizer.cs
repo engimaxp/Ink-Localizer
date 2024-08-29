@@ -1,6 +1,6 @@
 using Ink;
 using Ink.Parsed;
-using Object = Ink.Parsed.Object;
+using static InkLocalizer.TagManagement;
 
 namespace InkLocalizer;
 
@@ -44,18 +44,16 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 			return false;
 		}
 
-		// ----- For each file... -----
-		if (!ProcessFiles(inkFiles))
+		if (!TryProcessFiles(inkFiles))
 			return false;
 
-		// If new tags need to be added, add them now.
-		if (!InsertTagsToFiles())
+		if (!TryInsertTagsToFiles())
 			return false;
 
 		return true;
 	}
 
-	private bool ProcessFiles(List<string> inkFiles) {
+	private bool TryProcessFiles(List<string> inkFiles) {
 		foreach (string inkFile in inkFiles) {
 			string? content = FileHandler.LoadInkFileContents(inkFile);
 			if (content == null)
@@ -65,10 +63,8 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 				InkParser parser = new(content, inkFile, OnError, FileHandler);
 				Story? story = parser.Parse();
 
-				// Go through the parsed story extracting existing localized lines, and lines still to be localized...
-				if (!ProcessStory(story)) {
+				if (!TryProcessStory(story))
 					return false;
-				}
 			}
 			catch (Exception ex) {
 				Console.Error.WriteLine($"Error parsing ink file ({inkFile}): {ex.Message}");
@@ -82,7 +78,7 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 		throw new Exception("Ink Parse Error: " + message);
 	}
 
-	private bool ProcessStory(Story story) {
+	private bool TryProcessStory(Story story) {
 		HashSet<string> newFilesVisited = [];
 
 		if (!FindLocalizableText(story, newFilesVisited, out List<Text> validTextObjects))
@@ -132,7 +128,7 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 			return false;
 
 		// If it's a tag, ignore.
-		if (TagManagement.IsTextTag(text))
+		if (IsTextTag(text))
 			return false;
 
 		// Is this inside some code? In which case we can't do anything with that.
@@ -144,14 +140,14 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 
 	// Go through every Ink file that needs a tag insertion, and insert!
 
-	private bool InsertTagsToFiles() {
+	private bool TryInsertTagsToFiles() {
 		foreach ((string fileName, List<TagInsert> workList) in _idGenerator.FilesTagsToInsert) {
 			if (workList.Count == 0)
 				continue;
 
 			Console.WriteLine($"Updating IDs in file: {fileName}");
 
-			if (!TagManagement.InsertTagsToFile(fileName, workList, FileHandler))
+			if (!TryInsertTagsToFile(fileName, workList, FileHandler))
 				return false;
 		}
 		return true;

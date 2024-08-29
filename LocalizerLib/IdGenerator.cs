@@ -20,11 +20,6 @@ internal class IdGenerator {
 			_existingIDs.Add(locTag);
 	}
 
-	private string Generate(string fileName, Text text) {
-		string locPrefix = $"{System.IO.Path.GetFileNameWithoutExtension(fileName)}_{MakeLocPrefix(text)}";
-		return GenerateUniqueId(locPrefix);
-	}
-
 	private static string MakeLocPrefix(Text text) {
 		string prefix = string.Empty;
 		foreach (Object? obj in text.ancestry) {
@@ -62,22 +57,19 @@ internal class IdGenerator {
 		return new string(stringChars);
 	}
 
+	private string GenerateFileId(string fileName, Text text) {
+		string locPrefix = $"{System.IO.Path.GetFileNameWithoutExtension(fileName)}_{MakeLocPrefix(text)}";
+		return GenerateUniqueId(locPrefix);
+	}
+
 	public Dictionary<string, string> GenerateLocalizationIDs(List<Text> validTextObjects) {
 		Dictionary<string, string> strings = new();
 		foreach (Text text in validTextObjects) {
-			// Does the source already have a #id: tag?
-			string? locId = TagManagement.FindLocTagId(text);
-
-			// Skip if there's a tag and we aren't forcing a re-tag
-			if (locId != null && !_options.ReTag) {
-				// Add existing string to localization strings.
-				AddString(locId, text.text, strings);
+			if (AlreadyTagged(text, strings))
 				continue;
-			}
 
-			// Generate a new ID
 			string fileName = text.debugMetadata.fileName;
-			locId = Generate(System.IO.Path.GetFileNameWithoutExtension(fileName), text);
+			string locId = GenerateFileId(System.IO.Path.GetFileNameWithoutExtension(fileName), text);
 
 			// Add the ID and text object to a list of things to fix up in this file.
 			if (!FilesTagsToInsert.ContainsKey(fileName))
@@ -93,6 +85,15 @@ internal class IdGenerator {
 		}
 
 		return strings;
+	}
+
+	private bool AlreadyTagged(Text text, Dictionary<string, string> strings) {
+		string? locId = TagManagement.FindLocTagId(text);
+		if (locId == null || _options.ReTag)
+			return false;
+
+		AddString(locId, text.text, strings);
+		return true;
 	}
 
 	private void AddString(string locId, string value, Dictionary<string, string> strings) {

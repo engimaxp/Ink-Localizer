@@ -10,7 +10,7 @@ internal static partial class TagManagement {
 	private const string TagLoc = "id:";
 	private const bool DebugReTagFiles = false;
 
-	public static bool InsertTagsToFile(string fileName, List<TagInsert> workList, IFileHandler fileHandler) {
+	public static bool TryInsertTagsToFile(string fileName, List<TagInsert> workList, IFileHandler fileHandler) {
 		try {
 			string filePath = fileHandler.ResolveInkFilename(fileName);
 			string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
