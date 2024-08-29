@@ -13,41 +13,27 @@ internal abstract class Program {
 			return 0;
 
 		Localizer localizer = new(LocalizerOptions);
-		if (!localizer.Run()) {
-			Console.Error.WriteLine("Not localized.");
-			return -1;
-		}
+		localizer.Run();
 		Console.WriteLine($"Localized - found {localizer.Strings.Count} strings.");
 
-		if (CsvOptions.Enabled && !TryExportCsv(localizer)) {
-			Console.Error.WriteLine("CSV not written.");
-			return -1;
-		}
-
-		if (JsonOptions.Enabled && !TryExportJson(localizer)) {
-			Console.Error.WriteLine("JSON not written.");
-			return -1;
-		}
+		if (CsvOptions.Enabled)
+			ExportCsv(localizer);
+		if (JsonOptions.Enabled)
+			ExportJson(localizer);
 
 		return 0;
 	}
 
-	private static bool TryExportCsv(Localizer localizer) {
+	private static void ExportCsv(Localizer localizer) {
 		CsvHandler csvHandler = new(localizer, CsvOptions);
-		if (!csvHandler.WriteStrings()) {
-			return false;
-		}
+		csvHandler.WriteStrings();
 		Console.WriteLine($"CSV file written: {CsvOptions.OutputFilePath}");
-		return true;
 	}
 
-	private static bool TryExportJson(Localizer localizer) {
+	private static void ExportJson(Localizer localizer) {
 		JsonHandler jsonHandler = new(localizer, JsonOptions);
-		if (!jsonHandler.WriteStrings()) {
-			return false;
-		}
+		jsonHandler.WriteStrings();
 		Console.WriteLine($"JSON file written: {JsonOptions.OutputFilePath}");
-		return true;
 	}
 
 	private static bool ProcessArgs(string[] args) => args.Any(ProcessArg);

@@ -37,15 +37,11 @@ internal class IdGenerator {
 	}
 
 	private string GenerateUniqueId(string locPrefix) {
-		// Repeat a lot to try and get options. Should be hard to fail at this but
-		// let's set a limit to stop locks.
-		for (int i = 0; i < 100; i++) {
-			string locId = locPrefix + GenerateId();
-			if (_existingIDs.Add(locId)) {
-				return locId;
-			}
-		}
-		throw new Exception("Couldn't generate a unique ID! Really unlikely. Try again!");
+		string locId;
+		do locId = locPrefix + GenerateId();
+		while (!_existingIDs.Add(locId));
+
+		return locId;
 	}
 
 	private string GenerateId(int length = 4) {

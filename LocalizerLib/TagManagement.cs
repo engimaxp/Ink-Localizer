@@ -10,31 +10,24 @@ internal static partial class TagManagement {
 	private const string TagLoc = "id:";
 	private const bool DebugReTagFiles = false;
 
-	public static bool TryInsertTagsToFile(string fileName, List<TagInsert> workList, IFileHandler fileHandler) {
-		try {
-			string filePath = fileHandler.ResolveInkFilename(fileName);
-			string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
+	public static void InsertTagsToFile(string fileName, List<TagInsert> workList, IFileHandler fileHandler) {
+		string filePath = fileHandler.ResolveInkFilename(fileName);
+		string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
 
-			foreach (TagInsert item in workList) {
-				// Find out where we're supposed to do the insert.
-				int lineNumber = item.Text.debugMetadata.endLineNumber - 1;
-				string newLine = InsertTagInLine(item, lines, lineNumber);
+		foreach (TagInsert item in workList) {
+			// Find out where we're supposed to do the insert.
+			int lineNumber = item.Text.debugMetadata.endLineNumber - 1;
+			string newLine = InsertTagInLine(item, lines, lineNumber);
 
-				lines[lineNumber] = newLine;
-			}
-
-			// Write out to the input file.
-			string output = string.Join("\n", lines);
-			string outputFilePath = filePath;
-			if (DebugReTagFiles) // Debug purposes, copy to a different file instead.
-				outputFilePath += ".txt";
-			File.WriteAllText(outputFilePath, output, Encoding.UTF8);
-			return true;
+			lines[lineNumber] = newLine;
 		}
-		catch (Exception ex) {
-			Console.Error.WriteLine($"Error replacing tags in {fileName}: " + ex.Message);
-			return false;
-		}
+
+		// Write out to the input file.
+		string output = string.Join("\n", lines);
+		string outputFilePath = filePath;
+		if (DebugReTagFiles) // Debug purposes, copy to a different file instead.
+			outputFilePath += ".txt";
+		File.WriteAllText(outputFilePath, output, Encoding.UTF8);
 	}
 
 	[GeneratedRegex($@"(#{TagLoc})\w+")]
@@ -83,7 +76,7 @@ internal static partial class TagManagement {
 			if (IsTag(sibling, ref inTag))
 				continue;
 
-			TryAddTag(inTag, sibling, tags);
+			AddTag(inTag, sibling, tags);
 		}
 		return tags;
 	}
@@ -102,7 +95,7 @@ internal static partial class TagManagement {
 		return sibling is Text { text: "\n" };
 	}
 
-	private static void TryAddTag(int inTag, Object sibling, List<string> tags) {
+	private static void AddTag(int inTag, Object sibling, List<string> tags) {
 		if (inTag > 0 && sibling is Text text) {
 			tags.Add(text.text.Trim());
 		}

@@ -5,7 +5,7 @@ namespace InkLocalizer.TableOutputs;
 public class CsvHandler(Localizer localizer, TableOutputOptions? options = null) {
 	private readonly TableOutputOptions _options = options ?? new TableOutputOptions();
 
-	public bool WriteStrings() {
+	public void WriteStrings() {
 		string outputFilePath = Path.GetFullPath(_options.OutputFilePath);
 
 		try {
@@ -23,9 +23,7 @@ public class CsvHandler(Localizer localizer, TableOutputOptions? options = null)
 			File.WriteAllText(outputFilePath, fileContents, Encoding.UTF8);
 		}
 		catch (Exception ex) {
-			Console.Error.WriteLine($"Error writing out CSV file {outputFilePath}: " + ex.Message);
-			return false;
+			throw new Exception($"Error writing out CSV file {outputFilePath}: " + ex.Message);
 		}
-		return true;
 	}
 }

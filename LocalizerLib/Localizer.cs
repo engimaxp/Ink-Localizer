@@ -6,7 +6,6 @@ namespace InkLocalizer;
 
 public sealed class Localizer(LocalizerOptions? options = null) {
 	private readonly LocalizerOptions _localizerOptions = options ?? new LocalizerOptions();
-
 	private static readonly IFileHandler FileHandler = new DefaultFileHandler();
 
 	private readonly HashSet<string> _filesVisited = [];
@@ -14,14 +13,15 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 
 	private IdGenerator _idGenerator = null!;
 
-	public bool Run() {
+	public void Run() {
 		string folderPath = GetDirectoryPath();
+		if (!Directory.Exists(folderPath))
+			throw new DirectoryNotFoundException($"Directory \"{folderPath}\" does not exist.");
+
 		// Need this for InkParser to work properly with includes and such.
 		Directory.SetCurrentDirectory(folderPath);
-		bool success = TryProcessDirectory(folderPath);
+		ProcessDirectory(folderPath);
 		Directory.SetCurrentDirectory(Environment.CurrentDirectory);
-
-		return success;
 	}
 
 	private string GetDirectoryPath() {
@@ -32,71 +32,47 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 		return System.IO.Path.GetFullPath(folderPath);
 	}
 
-	private bool TryProcessDirectory(string folderPath) {
-		List<string> inkFiles = [];
-		try {
-			DirectoryInfo dir = new(folderPath);
-			inkFiles.AddRange(dir.GetFiles(_localizerOptions.FilePattern, SearchOption.AllDirectories)
-				.Select(file => file.FullName));
-		}
-		catch (Exception ex) {
-			Console.Error.WriteLine($"Error finding files to process: {folderPath}: " + ex.Message);
-			return false;
-		}
+	private void ProcessDirectory(string folderPath) {
+		DirectoryInfo dir = new(folderPath);
+		IEnumerable<string> inkFiles = dir.GetFiles(_localizerOptions.FilePattern, SearchOption.AllDirectories)
+			.Select(file => file.FullName);
 
-		if (!TryProcessFiles(inkFiles))
-			return false;
-
-		if (!TryInsertTagsToFiles())
-			return false;
-
-		return true;
+		ProcessFiles(inkFiles);
+		InsertTagsToFiles();
 	}
 
-	private bool TryProcessFiles(List<string> inkFiles) {
+	private void ProcessFiles(IEnumerable<string> inkFiles) {
 		foreach (string inkFile in inkFiles) {
 			string? content = FileHandler.LoadInkFileContents(inkFile);
 			if (content == null)
-				return false;
+				throw new InkParsingException($"Failed to load ink file \"{inkFile}\".");
 
-			try {
-				InkParser parser = new(content, inkFile, OnError, FileHandler);
-				Story? story = parser.Parse();
+			InkParser parser = new(content, inkFile, OnError, FileHandler);
+			Story? story = parser.Parse();
 
-				if (!TryProcessStory(story))
-					return false;
-			}
-			catch (Exception ex) {
-				Console.Error.WriteLine($"Error parsing ink file ({inkFile}): {ex.Message}");
-				return false;
-			}
+			ProcessStory(story);
 		}
-		return true;
 	}
 
 	private static void OnError(string message, ErrorType type) {
 		throw new Exception("Ink Parse Error: " + message);
 	}
 
-	private bool TryProcessStory(Story story) {
+	private void ProcessStory(Story story) {
 		HashSet<string> newFilesVisited = [];
 
-		if (!FindLocalizableText(story, newFilesVisited, out List<Text> validTextObjects))
-			return false;
+		List<Text> validTextObjects = FindLocalizableText(story, newFilesVisited);
 
 		if (newFilesVisited.Count > 0)
 			_filesVisited.UnionWith(newFilesVisited);
 
 		_idGenerator = new IdGenerator(validTextObjects, _localizerOptions);
 
-		// IDs are stored as tags in the form #id:file_knot_stitch_xxxx
 		Strings = _idGenerator.GenerateLocalizationIDs(validTextObjects);
-
-		return true;
 	}
 
-	private bool FindLocalizableText(Story story, HashSet<string> newFilesVisited, out List<Text> validTextObjects) {
-		validTextObjects = [];
+	private List<Text> FindLocalizableText(Story story, HashSet<string> newFilesVisited) {
+		List<Text> validTextObjects = [];
 		int lastLineNumber = -1;
 		foreach (Text? text in story.FindAll<Text>()) {
 			if (!IsTextValid(text))
@@ -111,15 +87,14 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 
 			// More than one text chunk on a line? We only deal with individual lines of stuff.
 			if (lastLineNumber == text.debugMetadata.startLineNumber) {
-				Console.Error.WriteLine(
-					$"Error in file {fileId} line {lastLineNumber} - two chunks of text when localizer can only work with one per line.");
-				return false;
+				throw new InkParsingException(
+					$"Error in file \"{fileId}\" line \"{lastLineNumber}\" - two chunks of text when localizer can only work with one per line.");
 			}
 			lastLineNumber = text.debugMetadata.startLineNumber;
 
 			validTextObjects.Add(text);
 		}
-		return true;
+		return validTextObjects;
 	}
 
 	private static bool IsTextValid(Text text) {
@@ -134,17 +109,13 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 	}
 
 	// Go through every Ink file that needs a tag insertion, and insert!
-
-	private bool TryInsertTagsToFiles() {
+	private void InsertTagsToFiles() {
 		foreach ((string fileName, List<TagInsert> workList) in _idGenerator.FilesTagsToInsert) {
 			if (workList.Count == 0)
 				continue;
 
 			Console.WriteLine($"Updating IDs in file: {fileName}");
-
-			if (!TryInsertTagsToFile(fileName, workList, FileHandler))
-				return false;
+			InsertTagsToFile(fileName, workList, FileHandler);
 		}
-		return true;
 	}
 }
