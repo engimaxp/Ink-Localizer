@@ -16,7 +16,7 @@ public class CsvHandler(Localizer localizer, CsvHandler.Options? options = null)
 			StringBuilder output = new();
 			output.AppendLine("ID,Text");
 
-			foreach (string locId in localizer.GetStringKeys()) {
+			foreach (string locId in localizer.StringKeys) {
 				string textValue = localizer.GetString(locId);
 				textValue = textValue.Replace("\"", "\"\"");
 				string line = $"{locId},\"{textValue}\"";

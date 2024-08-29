@@ -50,7 +50,7 @@ if (!localizer.Run()) {
 	Console.Error.WriteLine("Not localised.");
 	return -1;
 }
-Console.WriteLine($"Localised - found {localizer.GetStringKeys().Count} strings.");
+Console.WriteLine($"Localised - found {localizer.StringKeys.Count} strings.");
 
 // ----- CSV Output -----
 if (!string.IsNullOrEmpty(csvOptions.OutputFilePath)) {
