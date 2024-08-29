@@ -3,16 +3,13 @@ using Object = Ink.Parsed.Object;
 
 namespace InkLocalizer;
 
-internal class IdGenerator {
+internal class IdGenerator(LocalizerOptions localizerOptions) {
 	private readonly HashSet<string> _existingIDs = [];
 	private static readonly Random Random = new();
 
-	private readonly LocalizerOptions _options;
 	public readonly Dictionary<string, List<TagInsert>> FilesTagsToInsert = new();
 
-	public IdGenerator(List<Text> validTextObjects, LocalizerOptions localizerOptions) {
-		_options = localizerOptions;
-
+	public void SetExistingIDs(List<Text> validTextObjects) {
 		if (localizerOptions.ReTag)
 			return;
 
@@ -85,7 +82,7 @@ internal class IdGenerator {
 
 	private bool AlreadyTagged(Text text, Dictionary<string, string> strings) {
 		string? locId = TagManagement.FindLocTagId(text);
-		if (locId == null || _options.ReTag)
+		if (locId == null || localizerOptions.ReTag)
 			return false;
 
 		AddString(locId, text.text, strings);

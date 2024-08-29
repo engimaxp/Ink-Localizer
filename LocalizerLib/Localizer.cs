@@ -4,14 +4,18 @@ using static InkLocalizer.TagManagement;
 
 namespace InkLocalizer;
 
-public sealed class Localizer(LocalizerOptions? options = null) {
-	private readonly LocalizerOptions _localizerOptions = options ?? new LocalizerOptions();
+public sealed class Localizer {
+	private readonly LocalizerOptions _localizerOptions;
+	private readonly IdGenerator _idGenerator;
 	private static readonly IFileHandler FileHandler = new DefaultFileHandler();
 
 	private readonly HashSet<string> _filesVisited = [];
 	public Dictionary<string, string> Strings { private set; get; } = new();
 
-	private IdGenerator _idGenerator = null!;
+	public Localizer(LocalizerOptions? options = null) {
+		_localizerOptions = options ?? new LocalizerOptions();
+		_idGenerator = new IdGenerator(_localizerOptions);
+	}
 
 	public void Run() {
 		string folderPath = GetDirectoryPath();
@@ -66,7 +70,7 @@ public sealed class Localizer(LocalizerOptions? options = null) {
 		if (newFilesVisited.Count > 0)
 			_filesVisited.UnionWith(newFilesVisited);
 
-		_idGenerator = new IdGenerator(validTextObjects, _localizerOptions);
+		_idGenerator.SetExistingIDs(validTextObjects);
 
 		Strings = _idGenerator.GenerateLocalizationIDs(validTextObjects);
 	}

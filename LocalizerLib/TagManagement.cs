@@ -8,33 +8,36 @@ namespace InkLocalizer;
 
 internal static partial class TagManagement {
 	private const string TagLoc = "id:";
-	private const bool DebugReTagFiles = false;
+	private const bool DebugReTagFiles = true;
+
+	[GeneratedRegex($@"(#{TagLoc})\w+")]
+	private static partial Regex TagRegex();
 
 	public static void InsertTagsToFile(string fileName, List<TagInsert> workList, IFileHandler fileHandler) {
 		string filePath = fileHandler.ResolveInkFilename(fileName);
 		string[] lines = File.ReadAllLines(filePath, Encoding.UTF8);
+		Console.WriteLine(filePath);
 
 		foreach (TagInsert item in workList) {
-			// Find out where we're supposed to do the insert.
 			int lineNumber = item.Text.debugMetadata.endLineNumber - 1;
 			string newLine = InsertTagInLine(item, lines, lineNumber);
 
 			lines[lineNumber] = newLine;
 		}
 
-		// Write out to the input file.
 		string output = string.Join("\n", lines);
 		string outputFilePath = filePath;
-		if (DebugReTagFiles) // Debug purposes, copy to a different file instead.
+		if (DebugReTagFiles)
 			outputFilePath += ".txt";
+
+		Console.WriteLine(outputFilePath);
 		File.WriteAllText(outputFilePath, output, Encoding.UTF8);
 	}
 
-	[GeneratedRegex($@"(#{TagLoc})\w+")]
-	private static partial Regex TagRegex();
 	private static string InsertTagInLine(TagInsert item, string[] lines, int lineNumber) {
 		string newTag = $"#{TagLoc}{item.LocId}";
 		string oldLine = lines[lineNumber];
+
 		if (oldLine.Contains($"#{TagLoc}")) {
 			// Is there already a tag called #id: in there? In which case, we just want to replace that.
 			return TagRegex().Replace(oldLine, $"{newTag}");
