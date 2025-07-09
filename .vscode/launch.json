@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C#: LocaliserTool",
+            "name": "C#: LocalizerTool",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/LocaliserTool/bin/Debug/net8.0/osx-arm64/LocaliserTool.dll",
-            "args": ["--test"],
-            "cwd": "${workspaceFolder}/LocaliserTool",
+            "program": "${workspaceFolder}\\LocalizerTool\\bin\\Debug\\net8.0\\LocalizerTool.exe",
+            "args": ["--folder=inkFiles","--json=output\\strings.json"],
+            "cwd": "${workspaceFolder}\\LocalizerTool",
             "stopAtEntry": false,
             "console": "internalConsole"
         }

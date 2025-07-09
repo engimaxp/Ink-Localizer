@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/LocaliserTool/LocaliserTool.csproj"
+                "${workspaceFolder}\\LocalizerTool\\LocalizerTool.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
