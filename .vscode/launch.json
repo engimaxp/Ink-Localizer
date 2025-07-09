@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}\\LocalizerTool\\bin\\Debug\\net8.0\\LocalizerTool.exe",
-            "args": ["--folder=inkFiles","--json=output\\strings.json"],
+            "args": ["--folder=inkFiles","--po=output\\potfile.pot"],
             "cwd": "${workspaceFolder}\\LocalizerTool",
             "stopAtEntry": false,
             "console": "internalConsole"

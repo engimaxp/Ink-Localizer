@@ -9,6 +9,7 @@ internal abstract class Program {
 	private static readonly LocalizerOptions LocalizerOptions = new();
 	private static readonly TableOutputOptions CsvOptions = new();
 	private static readonly TableOutputOptions JsonOptions = new();
+	private static readonly TableOutputOptions PotOptions = new();
 
 	private static int Main(string[] args) {
 		if (ProcessArgs(args))
@@ -22,11 +23,20 @@ internal abstract class Program {
 			ExportCsv(localizer);
 		if (JsonOptions.Enabled)
 			ExportJson(localizer);
+		if (PotOptions.Enabled)
+			ExportPot(localizer);
 
 		return 0;
 	}
 
-	private static void ExportCsv(Localizer localizer) {
+    private static void ExportPot(Localizer localizer)
+    {
+		PotHandler potHandler = new(localizer, PotOptions);
+		potHandler.WriteStrings();
+		Console.WriteLine($"Pot file written: {PotOptions.OutputFilePath}");
+    }
+
+    private static void ExportCsv(Localizer localizer) {
 		CsvHandler csvHandler = new(localizer, CsvOptions);
 		csvHandler.WriteStrings();
 		Console.WriteLine($"CSV file written: {CsvOptions.OutputFilePath}");
@@ -45,19 +55,23 @@ internal abstract class Program {
 			return false;
 		}
 		if (arg.StartsWith("--folder=")) {
-			LocalizerOptions.RootFolder = arg.Substring(9);
+			LocalizerOptions.RootFolder = arg[9..];
 			return false;
 		}
 		if (arg.StartsWith("--filePattern=")) {
-			LocalizerOptions.FilePattern = arg.Substring(14);
+			LocalizerOptions.FilePattern = arg[14..];
 			return false;
 		}
 		if (arg.StartsWith("--csv=")) {
-			CsvOptions.OutputFilePath = arg.Substring(6);
+			CsvOptions.OutputFilePath = arg[6..];
 			return false;
 		}
 		if (arg.StartsWith("--json=")) {
-			JsonOptions.OutputFilePath = arg.Substring(7);
+			JsonOptions.OutputFilePath = arg[7..];
+			return false;
+		}
+		if (arg.StartsWith("--po=")) {
+			PotOptions.OutputFilePath = arg[5..];
 			return false;
 		}
 #if DEBUG
