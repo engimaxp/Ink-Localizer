@@ -18,4 +18,8 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Karambolo.PO" Version="1.12.0" />
+  </ItemGroup>
+
 </Project>

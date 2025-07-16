@@ -1,17 +1,15 @@
-﻿using InkLocalizer.TableOutputs;
+﻿using System.Threading.Tasks;
+using InkLocalizer.TableOutputs;
 
 namespace InkLocalizer;
 
 internal abstract class Program {
-#if DEBUG
-	private const string DebuggingTestPath = @"E:\GitHub\Ink-Localiser\LocalizerTool\tests";
-#endif
 	private static readonly LocalizerOptions LocalizerOptions = new();
 	private static readonly TableOutputOptions CsvOptions = new();
 	private static readonly TableOutputOptions JsonOptions = new();
 	private static readonly TableOutputOptions PotOptions = new();
 
-	private static int Main(string[] args) {
+	private static async Task<int> Main(string[] args) {
 		if (ProcessArgs(args))
 			return 0;
 
@@ -24,15 +22,15 @@ internal abstract class Program {
 		if (JsonOptions.Enabled)
 			ExportJson(localizer);
 		if (PotOptions.Enabled)
-			ExportPot(localizer);
+			await ExportPot(localizer);
 
 		return 0;
 	}
 
-    private static void ExportPot(Localizer localizer)
+    private static async Task ExportPot(Localizer localizer)
     {
 		PotHandler potHandler = new(localizer, PotOptions);
-		potHandler.WriteStrings();
+		await potHandler.WriteStrings();
 		Console.WriteLine($"Pot file written: {PotOptions.OutputFilePath}");
     }
 
@@ -58,12 +56,18 @@ internal abstract class Program {
 			LocalizerOptions.RootFolder = arg[9..];
 			return false;
 		}
-		if (arg.StartsWith("--filePattern=")) {
+		if (arg.StartsWith("--filePattern="))
+		{
 			LocalizerOptions.FilePattern = arg[14..];
 			return false;
 		}
 		if (arg.StartsWith("--csv=")) {
 			CsvOptions.OutputFilePath = arg[6..];
+			return false;
+		}
+		if (arg.StartsWith("--key=")) {
+			LocalizerOptions.DeepSeekKey = arg[6..];
+			LocalizerOptions.AutoTranslate = true;
 			return false;
 		}
 		if (arg.StartsWith("--json=")) {
@@ -74,14 +78,6 @@ internal abstract class Program {
 			PotOptions.OutputFilePath = arg[5..];
 			return false;
 		}
-#if DEBUG
-		if (arg.StartsWith("--test")) {
-			LocalizerOptions.RootFolder = DebuggingTestPath;
-			CsvOptions.OutputFilePath = @$"{DebuggingTestPath}\strings.csv";
-			JsonOptions.OutputFilePath = @$"{DebuggingTestPath}\strings.json";
-			return false;
-		}
-#endif
 
 		Console.WriteLine(
 			"""

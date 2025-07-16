@@ -6,7 +6,7 @@ using static InkLocalizer.TagManagement;
 namespace InkLocalizer;
 
 public sealed class Localizer {
-	private readonly LocalizerOptions _localizerOptions;
+	public readonly LocalizerOptions localizerOptions;
 	private readonly IdGenerator _idGenerator;
 	private static readonly IFileHandler FileHandler = new DefaultFileHandler();
 
@@ -14,8 +14,8 @@ public sealed class Localizer {
 	public Dictionary<string, string> Strings { get; } = new();
 
 	public Localizer(LocalizerOptions? options = null) {
-		_localizerOptions = options ?? new LocalizerOptions();
-		_idGenerator = new IdGenerator(_localizerOptions);
+		localizerOptions = options ?? new LocalizerOptions();
+		_idGenerator = new IdGenerator(localizerOptions);
 	}
 
 	public void Run() {
@@ -30,7 +30,7 @@ public sealed class Localizer {
 	}
 
 	private string GetDirectoryPath() {
-		string folderPath = _localizerOptions.RootFolder;
+		string folderPath = localizerOptions.RootFolder;
 		if (string.IsNullOrWhiteSpace(folderPath))
 			folderPath = Environment.CurrentDirectory;
 
@@ -39,7 +39,7 @@ public sealed class Localizer {
 
 	private void ProcessDirectory(string folderPath) {
 		DirectoryInfo dir = new(folderPath);
-		IEnumerable<string> inkFiles = dir.GetFiles(_localizerOptions.FilePattern, SearchOption.AllDirectories)
+		IEnumerable<string> inkFiles = dir.GetFiles(localizerOptions.FilePattern, SearchOption.AllDirectories)
 			.Select(file => file.FullName);
 
 		ProcessFiles(inkFiles);

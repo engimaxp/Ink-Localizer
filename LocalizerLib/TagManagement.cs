@@ -26,9 +26,6 @@ internal static partial class TagManagement {
 
 		string output = string.Join("\n", lines);
 		string outputFilePath = filePath;
-#if DEBUG
-		outputFilePath += ".txt";
-#endif
 		Console.WriteLine(outputFilePath);
 		File.WriteAllText(outputFilePath, output, Encoding.UTF8);
 	}

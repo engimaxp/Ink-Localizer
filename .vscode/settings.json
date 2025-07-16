@@ -1,3 +1,7 @@
 {
-    "dotnet.defaultSolution": "LocaliserTool.sln"
+    "dotnet.defaultSolution": "LocaliserTool.sln",
+    "cSpell.words": [
+        "deepseek",
+        "Karambolo"
+    ]
 }
